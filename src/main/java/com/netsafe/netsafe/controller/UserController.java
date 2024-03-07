@@ -11,6 +11,7 @@ import com.netsafe.netsafe.utils.ThreadLocalUtil;
 import jakarta.mail.MessagingException;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/user")
@@ -47,28 +47,9 @@ public class UserController {
      * @return code 1成功/0失败 成功返回data 失败返回message
      */
     @PostMapping("/register")
-    public Result register( String username, String password,String organization,String phone,String code)
+    public Result register( @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$" ,message = "用户名长度4-16") String username, @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$",message ="密码长度4-16" ) String password,@NotNull(message = "组织为必传字段")   String organization,@NotNull(message = "手机号为必传字段")  @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone,@NotNull(message = "验证码为必传字段") String code)
     {
         //使用@Pattern(regexp = "^\\S{4,16}$") 也能拦截 但是返回的数据无法被前端直接了解 对用户不友好
-        if (username.length()<2)
-        {
-            return Result.error("用户名过短！");
-        }
-
-        if (password.length()<6)
-        {
-            return Result.error("密码过短！");
-        }
-
-        if (organization.length()<2)
-        {
-            return Result.error("组织名称过短！");
-        }
-
-        if (phone.length()<11)
-        {
-            return Result.error("手机号过短！");
-        }
 
         LogUtil.LOG("注册用户:"+username);
         User user = userService.selectUserByName(username);
@@ -93,18 +74,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Result login(String username,String password)
+    public Result login(@NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$" ,message = "用户名长度4-16") String username, @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$",message ="密码长度4-16" ) String password)
     {
-        //使用@Pattern(regexp = "^\\S{4,16}$") 也能拦截 但是返回的数据无法被前端直接了解 对用户不友好
-        if (username.length()<2)
-        {
-            return Result.error("用户名过短！");
-        }
-
-        if (password.length()<6)
-        {
-            return Result.error("密码过短！");
-        }
+        //使用 也能拦截 但是返回的数据无法被前端直接了解 对用户不友好
 
         LogUtil.LOG("登录用户:"+username);
         User user = userService.selectUserByName(username);
@@ -127,23 +99,9 @@ public class UserController {
     }
 
     @GetMapping("/send")
-    public Result send(String phone)
+    public Result send(@NotNull(message = "手机号为必传参数") @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone)
     {
-        if (phone==null)
-        {
-            return Result.error("手机号为必传参数");
-        }
-        if (phone.length()<11)
-        {
-            return Result.error("手机号格式不正确！");
-        }
-        String regex = "^1[3-9]\\d{9}$";
-        Pattern pattern = Pattern.compile(regex);
 
-        // 检查手机号格式
-        if (!pattern.matcher(phone).matches()) {
-            return Result.error("手机号格式不正确！");
-        }
         User user = userService.selectUserByPhone(phone);
         if (user!=null)
         {
