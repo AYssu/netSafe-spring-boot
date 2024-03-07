@@ -2,7 +2,7 @@ package com.netsafe.netsafe.utils;
 
 public class LogUtil {
     private static final String TAG = "netSafe";
-    private static final boolean isPrint = true;
+    private static final boolean isPrint = false;
     public static void LOG(String log)
     {
         if (isPrint)

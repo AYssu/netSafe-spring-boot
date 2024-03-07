@@ -9,6 +9,8 @@ import com.netsafe.netsafe.utils.JwtUtil;
 import com.netsafe.netsafe.utils.LogUtil;
 import com.netsafe.netsafe.utils.ThreadLocalUtil;
 import jakarta.mail.MessagingException;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -166,8 +168,8 @@ public class UserController {
         return Result.error("获取用户失败！");
     }
 
-    @GetMapping("/sendMail")
-    public Result sendMail(String send){
+    @PostMapping ("/sendMail")
+    public Result sendMail(@Email(message = "邮箱格式错误") String send){
         Result result = new Result();
 
         try {
@@ -181,6 +183,14 @@ public class UserController {
         {
             return result;
         }
+        return Result.success();
+    }
+
+    @GetMapping("/sendMail")
+    public Result sendMail(@Email(message = "邮箱格式有误！") String send, @NotNull(message = "不能为空") String title, @NotNull(message = "不能为空") String content){
+        Result result = mailService.sendMail(send,title,content);
+        if (result.getCode()==0)
+            return result;
         return Result.success();
     }
 }

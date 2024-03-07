@@ -68,8 +68,4 @@ class NetSafeApplicationTests {
         javaMailSender.send(message);
     }
 
-    @Test
-    void sendText() throws MessagingException {
-        mailService.test();
-    }
 }

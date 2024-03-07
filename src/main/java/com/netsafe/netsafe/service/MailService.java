@@ -10,4 +10,5 @@ public interface MailService {
 
     Result checkMail(String send);
 
+    Result sendMail(String send, String title, String content);
 }

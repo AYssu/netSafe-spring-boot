@@ -112,16 +112,16 @@ public class MailServiceImpl implements MailService {
             //使用多线程 优化用户体验
             //这边最快能一秒做出相应 但是修修改改 也没有改什么就会变成10s 之前是因为ITAM和SSL没有打开
 
-//            Thread thread = new Thread(() ->
-//            {
-//                javaMailSender.send(mimeMessage);
-//                Instant finalTime = Instant.now();
-//                Duration durationBetween = Duration.between(now,finalTime);
-//                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
-//            });
-//            thread.start();
+            Thread thread = new Thread(() ->
+            {
+                javaMailSender.send(mimeMessage);
+                Instant finalTime = Instant.now();
+                Duration durationBetween = Duration.between(now,finalTime);
+                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+            });
+            thread.start();
 
-            sendEmailAsync(now,mimeMessage);
+//            sendEmailAsync(now,mimeMessage);
 
             //貌似使用这个会更好
 
@@ -150,6 +150,54 @@ public class MailServiceImpl implements MailService {
         //验证验证码成功就删除验证码了
         redisService.remove(REDIS_KEY_PREFIX_AUTH_Mail + send);
         return Result.success("用户注册成功");
+    }
+
+    @Override
+    public Result sendMail(String send, String title, String content) {
+        LogUtil.LOG("文本对象："+content);
+        Instant start = Instant.now();
+        try {
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            System.getProperties().setProperty("mail.mime.address.usecanonicalhostname", "false");
+            // 获取 MimeMessage
+            Session session = mimeMessage.getSession();
+            // 设置 日志打印控制器
+            session.setDebug(false);
+            //  解决本地DNS未配置 ip->域名场景下，邮件发送太慢的问题
+            session.getProperties().setProperty("mail.smtp.localhost", "localhost");
+
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true);
+            // 发送人的邮箱
+            messageHelper.setFrom(from);
+            //发给谁  对方邮箱
+            messageHelper.setTo(send);
+            //标题
+            messageHelper.setSubject(title);
+            //使用模板thymeleaf
+            //定义模板数据
+            //获取thymeleaf的html模板
+            messageHelper.setText(content,false);
+            //这边最快能一秒做出相应 但是修修改改 也没有改什么就会变成10s 之前是因为ITAM和SSL没有打开
+            Instant now = Instant.now();
+            Duration duration = Duration.between(start,now);
+            LogUtil.LOG("代码执行前部分时间:"+duration);
+            Thread thread = new Thread(() ->
+            {
+                javaMailSender.send(mimeMessage);
+                Instant finalTime = Instant.now();
+                Duration durationBetween = Duration.between(now,finalTime);
+                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+            });
+            thread.start();
+
+
+            LogUtil.LOG("发送请求完成");
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return Result.error("邮件发送失败");
+        }
+        return Result.success();
     }
 
 }
