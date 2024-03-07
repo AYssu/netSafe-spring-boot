@@ -8,6 +8,7 @@ import com.netsafe.netsafe.service.UserService;
 import com.netsafe.netsafe.utils.JwtUtil;
 import com.netsafe.netsafe.utils.LogUtil;
 import com.netsafe.netsafe.utils.ThreadLocalUtil;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -166,12 +167,16 @@ public class UserController {
     }
 
     @GetMapping("/sendMail")
-    public Result sendMail(String send,int type){
+    public Result sendMail(String send){
         Result result = new Result();
-        if (type==0)
+
+        try {
             result =  mailService.sendMail(send);
-        else
-            result = mailService.sendMailHtml(send);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return Result.error("验证码发送失败！");
+
+        }
         if (result.getCode()==0)
         {
             return result;
