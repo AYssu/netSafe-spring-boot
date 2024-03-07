@@ -5,10 +5,12 @@ import com.netsafe.netsafe.pojo.User;
 import com.netsafe.netsafe.service.MailService;
 import com.netsafe.netsafe.service.SendCodeService;
 import com.netsafe.netsafe.service.UserService;
+import com.netsafe.netsafe.utils.IpUtil;
 import com.netsafe.netsafe.utils.JwtUtil;
 import com.netsafe.netsafe.utils.LogUtil;
 import com.netsafe.netsafe.utils.ThreadLocalUtil;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -99,16 +101,17 @@ public class UserController {
     }
 
     @GetMapping("/send")
-    public Result send(@NotNull(message = "手机号为必传参数") @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone)
+    public Result send(HttpServletRequest request ,@NotNull(message = "手机号为必传参数") @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone)
     {
-
         User user = userService.selectUserByPhone(phone);
+        String ipAddress = IpUtil.getIpAddr(request);
         if (user!=null)
         {
+//            sendCodeService.insertSend(phone,"尝试发送验证码","验证码",0,)
             return Result.error("该手机号已经注册！");
         }
 
-        return sendCodeService.send(phone);
+        return sendCodeService.send(phone,ipAddress);
     }
 
     @GetMapping("/userInfo")
@@ -127,15 +130,16 @@ public class UserController {
     }
 
     @PostMapping ("/sendMail")
-    public Result sendMail(@Email(message = "邮箱格式错误") String send){
+    public Result sendMail(HttpServletRequest request , @Email(message = "邮箱格式错误") String send){
         Result result = new Result();
+        String ipAddress = IpUtil.getIpAddr(request);
 
         try {
-            result =  mailService.sendMail(send);
+            result =  mailService.sendMail(send,ipAddress);
         } catch (MessagingException e) {
             e.printStackTrace();
+            mailService.insertCodeMessage(send,"邮箱验证码","验证码发送失败",1,ipAddress,false);
             return Result.error("验证码发送失败！");
-
         }
         if (result.getCode()==0)
         {
@@ -145,8 +149,9 @@ public class UserController {
     }
 
     @GetMapping("/sendMail")
-    public Result sendMail(@Email(message = "邮箱格式有误！") String send, @NotNull(message = "不能为空") String title, @NotNull(message = "不能为空") String content){
-        Result result = mailService.sendMail(send,title,content);
+    public Result sendMail(HttpServletRequest request ,@Email(message = "邮箱格式有误！") String send, @NotNull(message = "不能为空") String title, @NotNull(message = "不能为空") String content){
+        String ipAddress = IpUtil.getIpAddr(request);
+        Result result = mailService.sendMail(send,title,content,ipAddress);
         if (result.getCode()==0)
             return result;
         return Result.success();

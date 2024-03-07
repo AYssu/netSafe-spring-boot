@@ -1,6 +1,7 @@
 package com.netsafe.netsafe.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.netsafe.netsafe.mapper.MailMapper;
 import com.netsafe.netsafe.pojo.MailDO;
 import com.netsafe.netsafe.pojo.Result;
 import com.netsafe.netsafe.service.MailService;
@@ -32,6 +33,8 @@ import java.util.Random;
 public class MailServiceImpl implements MailService {
 
     @Autowired
+    private MailMapper mailMapper;
+    @Autowired
     private JavaMailSender javaMailSender;
     //template模板引擎
     @Autowired
@@ -59,12 +62,13 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public Result sendMail(String send) throws MessagingException {
+    public Result sendMail(String send,String ip) throws MessagingException {
         Instant start = Instant.now();
         MailDO mailDO = new MailDO();
         String redisauthmail = redisService.get(REDIS_KEY_PREFIX_AUTH_Mail + send);
         if (!StringUtils.isEmpty(redisauthmail)) {
             //如果未取到则过期
+            insertCodeMessage(send,"邮箱验证码","请勿重复发送",1,ip,false);
             return Result.error("请勿重复发送!");
         }
         StringBuilder sb = new StringBuilder();
@@ -118,6 +122,8 @@ public class MailServiceImpl implements MailService {
                 Instant finalTime = Instant.now();
                 Duration durationBetween = Duration.between(now,finalTime);
                 LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+                insertCodeMessage(send,"邮箱验证码","发送成功:"+sb,1,ip,true);
+
             });
             thread.start();
 
@@ -129,6 +135,8 @@ public class MailServiceImpl implements MailService {
 
         } catch (MessagingException e) {
             e.printStackTrace();
+            insertCodeMessage(send,"邮箱验证码","发送失败:"+sb,1,ip,false);
+
             return Result.error("邮件发送失败");
         }
         //验证码绑定手机号并存储到redis
@@ -153,7 +161,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public Result sendMail(String send, String title, String content) {
+    public Result sendMail(String send, String title, String content,String ip) {
         LogUtil.LOG("文本对象："+content);
         Instant start = Instant.now();
         try {
@@ -187,6 +195,8 @@ public class MailServiceImpl implements MailService {
                 Instant finalTime = Instant.now();
                 Duration durationBetween = Duration.between(now,finalTime);
                 LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+                insertCodeMessage(send,title,content,2,ip,true);
+
             });
             thread.start();
 
@@ -195,9 +205,16 @@ public class MailServiceImpl implements MailService {
 
         } catch (MessagingException e) {
             e.printStackTrace();
+            insertCodeMessage(send,title,"发送失败:"+content,2,ip,false);
+
             return Result.error("邮件发送失败");
         }
         return Result.success();
+    }
+
+    @Override
+    public void insertCodeMessage(String send,String title ,String content, int i, String ipAddress,boolean success) {
+        mailMapper.inserCodeMessage(send,title,content,i,ipAddress,success);
     }
 
 }

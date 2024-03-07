@@ -6,9 +6,11 @@ import jakarta.mail.MessagingException;
 public interface MailService {
 
 
-    Result sendMail(String send) throws MessagingException;
+    Result sendMail(String send,String ip) throws MessagingException;
 
     Result checkMail(String send);
 
-    Result sendMail(String send, String title, String content);
+    Result sendMail(String send, String title, String content,String ip);
+
+    void insertCodeMessage(String send,String title ,String content, int i, String ipAddress,boolean success);
 }
