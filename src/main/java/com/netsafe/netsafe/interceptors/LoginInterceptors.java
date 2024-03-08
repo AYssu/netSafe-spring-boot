@@ -33,7 +33,7 @@ public class LoginInterceptors implements HandlerInterceptor {
             }
             Map<String, Object> map = JwtUtil.parseToken(authorization);
             ThreadLocalUtil.set(map);
-            LogUtil.LOG("设置map");
+            //LogUtil.LOG("设置map");
             return true;
         } catch (Exception e) {
             response.setStatus(401);
