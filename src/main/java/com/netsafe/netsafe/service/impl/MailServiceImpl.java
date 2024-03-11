@@ -4,19 +4,17 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.netsafe.netsafe.mapper.MailMapper;
 import com.netsafe.netsafe.pojo.MailDO;
 import com.netsafe.netsafe.pojo.Result;
+import com.netsafe.netsafe.service.AsyncService;
 import com.netsafe.netsafe.service.MailService;
 import com.netsafe.netsafe.service.RedisService;
 import com.netsafe.netsafe.utils.LogUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -27,10 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-@Slf4j
 @Service
-@EnableAsync
 public class MailServiceImpl implements MailService {
+
 
     @Autowired
     private MailMapper mailMapper;
@@ -42,7 +39,8 @@ public class MailServiceImpl implements MailService {
     @Value("${spring.mail.username}")
     private String from;
 
-
+    @Autowired
+    private AsyncService asyncService;
     @Autowired
     private RedisService redisService;
 
@@ -52,14 +50,7 @@ public class MailServiceImpl implements MailService {
     @Value("${redis.key.expire.authMail}")
     private Long AUTH_Mail_EXPIRE_SECONDS;
 
-    @Async("taskExecutor")
-    public void sendEmailAsync(Instant now,MimeMessage mimeMessage) {
-        LogUtil.LOG("异步请求开始");
-        javaMailSender.send(mimeMessage);
-        Instant finalTime = Instant.now();
-        Duration durationBetween = Duration.between(now, finalTime);
-        LogUtil.LOG("代码执行后部分时间:" + durationBetween);
-    }
+
 
     @Override
     public Result sendMail(String send,String ip) throws MessagingException {
@@ -116,20 +107,20 @@ public class MailServiceImpl implements MailService {
             //使用多线程 优化用户体验
             //这边最快能一秒做出相应 但是修修改改 也没有改什么就会变成10s 之前是因为ITAM和SSL没有打开
 
-            Thread thread = new Thread(() ->
-            {
-                javaMailSender.send(mimeMessage);
-                Instant finalTime = Instant.now();
-                Duration durationBetween = Duration.between(now,finalTime);
-                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
-                insertCodeMessage(send,"邮箱验证码","发送成功:"+sb,1,ip,true);
+//            Thread thread = new Thread(() ->
+//            {
+//                javaMailSender.send(mimeMessage);
+//                Instant finalTime = Instant.now();
+//                Duration durationBetween = Duration.between(now,finalTime);
+//                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+//                insertCodeMessage(send,"邮箱验证码","发送成功:"+sb,1,ip,true);
+//
+//            });
+//            thread.start();
 
-            });
-            thread.start();
+            asyncService.sendEmailAsync(now,mimeMessage);
 
-//            sendEmailAsync(now,mimeMessage);
-
-            //貌似使用这个会更好
+            //貌似使用这个会更好 2024/3/10 已修复 问题是因为Async不支持同一个类里面的方法
 
             LogUtil.LOG("发送请求完成");
 
@@ -189,16 +180,20 @@ public class MailServiceImpl implements MailService {
             Instant now = Instant.now();
             Duration duration = Duration.between(start,now);
             LogUtil.LOG("代码执行前部分时间:"+duration);
-            Thread thread = new Thread(() ->
-            {
-                javaMailSender.send(mimeMessage);
-                Instant finalTime = Instant.now();
-                Duration durationBetween = Duration.between(now,finalTime);
-                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
-                insertCodeMessage(send,title,content,2,ip,true);
+//            Thread thread = new Thread(() ->
+//            {
+//                javaMailSender.send(mimeMessage);
+//                Instant finalTime = Instant.now();
+//                Duration durationBetween = Duration.between(now,finalTime);
+//                LogUtil.LOG("代码执行后部分时间:"+durationBetween);
+//                insertCodeMessage(send,title,content,2,ip,true);
+//
+//            });
+//            thread.start();
 
-            });
-            thread.start();
+            asyncService.sendEmailAsync(now,mimeMessage);
+
+
 
 
             LogUtil.LOG("发送请求完成");

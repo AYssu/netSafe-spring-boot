@@ -151,6 +151,7 @@ public class UserController {
     @GetMapping("/sendMail")
     public Result sendMail(HttpServletRequest request ,@Email(message = "邮箱格式有误！") String send, @NotNull(message = "不能为空") String title, @NotNull(message = "不能为空") String content){
         String ipAddress = IpUtil.getIpAddr(request);
+
         Result result = mailService.sendMail(send,title,content,ipAddress);
         if (result.getCode()==0)
             return result;
