@@ -15,12 +15,11 @@ import java.time.Instant;
 public class AsyncServiceImpl implements AsyncService {
     @Autowired
     private JavaMailSender javaMailSender;
-    @Async
+    @Async("taskExecutor")
     @Override
     public void sendEmailAsync(Instant now, MimeMessage mimeMessage) {
         LogUtil.LOG("异步请求开始");
         javaMailSender.send(mimeMessage);
-
         Instant finalTime = Instant.now();
         Duration durationBetween = Duration.between(now, finalTime);
         LogUtil.LOG("代码执行后部分时间:" + durationBetween);
