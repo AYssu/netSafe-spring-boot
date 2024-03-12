@@ -5,7 +5,6 @@ import jakarta.mail.MessagingException;
 
 public interface MailService {
 
-
     Result sendMail(String send,String ip) throws MessagingException;
 
     Result checkMail(String send);

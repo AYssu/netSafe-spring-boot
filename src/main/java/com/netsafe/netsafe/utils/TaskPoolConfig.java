@@ -14,7 +14,7 @@ public class TaskPoolConfig {
     public Executor taskExecutor() {
         //返回可用处理器的Java虚拟机的数量 12
         int i = Runtime.getRuntime().availableProcessors();
-        System.out.println("系统最大线程数  ：" + i);
+        LogUtil.LOG("系统最大线程数  ：" + i);
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //核心线程池大小
         executor.setCorePoolSize(16);
