@@ -49,7 +49,7 @@ public class UserController {
      * @return code 1成功/0失败 成功返回data 失败返回message
      */
     @PostMapping("/register")
-    public Result register( @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$" ,message = "用户名长度4-16") String username, @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$",message ="密码长度4-16" ) String password,@NotNull(message = "组织为必传字段")   String organization,@NotNull(message = "手机号为必传字段")  @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone,@NotNull(message = "验证码为必传字段") String code)
+    public Result register( @NotNull(message = "用户为必传字段") @Pattern(regexp = "^\\S{4,16}$" ,message = "用户名长度4-16") String username, @NotNull(message = "密码为必传字段") @Pattern(regexp = "^\\S{4,16}$",message ="密码长度4-16" ) String password,@NotNull(message = "组织为必传字段")   String organization,@NotNull(message = "手机号为必传字段")  @Pattern(regexp = "^1[3-9]\\d{9}$",message = "手机号格式错误") String phone,@NotNull(message = "验证码为必传字段") String code)
     {
         //使用@Pattern(regexp = "^\\S{4,16}$") 也能拦截 但是返回的数据无法被前端直接了解 对用户不友好
 

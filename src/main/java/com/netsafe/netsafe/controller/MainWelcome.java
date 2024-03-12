@@ -11,6 +11,6 @@ public class MainWelcome {
     @GetMapping
     public Result<String> tables()
     {
-        return Result.success("ay666");
+        return Result.success("");
     }
 }

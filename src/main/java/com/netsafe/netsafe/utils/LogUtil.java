@@ -2,10 +2,11 @@ package com.netsafe.netsafe.utils;
 
 public class LogUtil {
     private static final String TAG = "netSafe";
-    private static final boolean isPrint = true;
+
+    public static boolean Debug = false;
     public static void LOG(String log)
     {
-        if (isPrint)
+        if (Debug)
         {
             System.out.println(TAG+"："+log);
         }
