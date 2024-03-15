@@ -2,11 +2,13 @@ package com.netsafe.netsafe.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Map;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class MailDO {
     /**
@@ -26,17 +28,4 @@ public class MailDO {
      */
     private Map<String, Object> attachment;
 
-    public MailDO() {
-
-    }
-
-    @Override
-    public String toString() {
-        return "MailDO{" +
-                "title='" + title + '\'' +
-                ", content='" + content + '\'' +
-                ", email=" + Arrays.toString(email) +
-                ", attachment=" + attachment +
-                '}';
-    }
 }
