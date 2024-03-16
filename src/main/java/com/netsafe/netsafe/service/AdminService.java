@@ -22,5 +22,18 @@ public interface AdminService {
     Result insertGuard(Guard guard);
 
     Guard selectGuardByPhone(String phone);
-    PageBean<Guard> getGuardList(int curren);
+    PageBean<Guard> getGuardList(int i, String guardName, String phone, String company, String state);
+
+    Guard selectGuardByID(Integer id);
+
+
+    Result reviewGuard(Guard guard);
+
+    Result disableGuard(Guard guard);
+
+    Result updateguard(Guard guard);
+
+    Result rePasswordGuard(Guard guard);
+
+    Result updateAdmin(Admin admin);
 }

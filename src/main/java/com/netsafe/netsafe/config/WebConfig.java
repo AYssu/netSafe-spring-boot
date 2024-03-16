@@ -12,6 +12,6 @@ public class WebConfig implements WebMvcConfigurer {
     private LoginInterceptors loginInterceptors;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-       registry.addInterceptor(loginInterceptors).excludePathPatterns("/user/login","/user/register","/user/send","/welcome","/user/sendMail","/file/upload","/Verify/*","/admin/login");
+       registry.addInterceptor(loginInterceptors).excludePathPatterns("/user/login","/user/register","/user/send","/welcome","/user/sendMail","/Verify/*","/admin/login");
     }
 }

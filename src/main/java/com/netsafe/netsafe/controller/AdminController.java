@@ -1,6 +1,5 @@
 package com.netsafe.netsafe.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.netsafe.netsafe.pojo.*;
 import com.netsafe.netsafe.service.AdminService;
 import com.netsafe.netsafe.utils.LogUtil;
@@ -106,11 +105,85 @@ public class AdminController {
         return adminService.insertGuard(guard);
     }
 
-    @PostMapping("/getGuard")
-    public Result getGuard(String curren)
+    @PostMapping("/updateGuard")
+    public Result update(@RequestBody @Validated Guard guard)
     {
-        LogUtil.LOG("查询页数："+curren);
-        PageBean<Guard> pageBean =  adminService.getGuardList(Integer.parseInt(curren));
+        Guard guard1 = adminService.selectGuardByID(guard.getId());
+        if (guard1==null)
+        {
+            return Result.error("非法操作");
+        }
+        guard.setUpdateTime(LocalDateTime.now());
+        return adminService.updateguard(guard);
+    }
+
+    @PostMapping("/getGuard")
+    public Result getGuard(String curren, @RequestParam(required = false) String guardName, @RequestParam(required = false) String phone, @RequestParam(required = false) String company, @RequestParam(required = false) String state)
+    {
+
+        PageBean<Guard> pageBean =  adminService.getGuardList(Integer.parseInt(curren),guardName,phone,company,state);
         return Result.success(pageBean);
     }
+
+    @PostMapping("/reviewGuard")
+    public Result review(@RequestParam Integer id,int type)
+    {
+
+        Map<String,Object> map = ThreadLocalUtil.get();
+        int aid =  (Integer)map.get("id");
+        LogUtil.LOG("操作ID:"+aid);
+        Admin admin = adminService.selectAdminByID(aid);
+        if (admin==null)
+        {
+            return Result.error("非法操作");
+        }
+
+        Guard guard = adminService.selectGuardByID(id);
+        if (guard==null)
+        {
+            return Result.error("无效保安");
+        }
+        Result result = new Result<>();
+        if (type==0)
+            result = adminService.reviewGuard(guard);
+        else if (type==1)
+            result = adminService.disableGuard(guard);
+
+        return result;
+    }
+
+
+    @PostMapping("/passwordGuard")
+    public Result password(@RequestParam Integer id)
+    {
+
+        Map<String,Object> map = ThreadLocalUtil.get();
+        int aid =  (Integer)map.get("id");
+        LogUtil.LOG("操作ID:"+aid);
+        Admin admin = adminService.selectAdminByID(aid);
+        if (admin==null)
+        {
+            return Result.error("非法操作");
+        }
+
+        Guard guard = adminService.selectGuardByID(id);
+        if (guard==null)
+        {
+            return Result.error("无效保安");
+        }
+
+
+        return adminService.rePasswordGuard(guard);
+    }
+
+    @PostMapping("/updateAdmin")
+    public Result updateAdmin(@RequestBody Admin admin)
+    {
+        Map<String,Object> map = ThreadLocalUtil.get();
+        int aid =  (Integer)map.get("id");
+        admin.setId(aid);
+        admin.setUpdateTime(LocalDateTime.now());
+        return adminService.updateAdmin(admin);
+    }
+
 }

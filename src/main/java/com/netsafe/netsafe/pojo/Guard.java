@@ -28,6 +28,8 @@ public class Guard {
     private String phone;
     private Integer cid;
     private String master;
+    private String password;
+    private String salt;
     private Integer state;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;

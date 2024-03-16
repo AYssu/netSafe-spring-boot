@@ -9,8 +9,7 @@ import com.netsafe.netsafe.mapper.GroupMapper;
 import com.netsafe.netsafe.mapper.GuardMapper;
 import com.netsafe.netsafe.pojo.*;
 import com.netsafe.netsafe.service.AdminService;
-import com.netsafe.netsafe.utils.JwtUtil;
-import com.netsafe.netsafe.utils.LogUtil;
+import com.netsafe.netsafe.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -20,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -54,7 +54,7 @@ public class AdminServiceImpl implements AdminService {
             map.put("adminname", admin.getAdminname());
             String s = JwtUtil.genToken(map);
             ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
-            stringStringValueOperations.set(s, s, 1, TimeUnit.HOURS);
+            stringStringValueOperations.set(s, s, 365, TimeUnit.DAYS);
             return Result.success(s);
         }
 
@@ -120,19 +120,102 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public PageBean<Guard> getGuardList(int curren) {
+    public PageBean<Guard> getGuardList(int curren, String guardName, String phone, String company, String state) {
         Page<Guard> guardPage = new Page<>(curren, 15);
         LambdaQueryWrapper<Guard> queryWrapper = new LambdaQueryWrapper<>();
+        if (guardName!=null&&!guardName.isEmpty()&&!guardName.equals("null"))
+            queryWrapper.like(Guard::getGuardName,guardName);
+        if (phone!=null&&!phone.isEmpty()&&!phone.equals("null"))
+            queryWrapper.like(Guard::getPhone,phone);
+        if (company!=null&&!company.isEmpty()&&!company.equals("null"))
+            queryWrapper.eq(Guard::getCid,Integer.parseInt(company));
+        if (state!=null&&!state.isEmpty()&&!state.equals("null"))
+            queryWrapper.eq(Guard::getState,Integer.parseInt(state));
         Page<Guard> guardPage1 = guardMapper.selectPage(guardPage, queryWrapper);
-        LogUtil.LOG("共:" + guardPage1.getTotal());
-        LogUtil.LOG("共:" + guardPage1.getPages());
-        LogUtil.LOG("共:" + guardPage1.getSize());
-        LogUtil.LOG("共:" + guardPage1.getRecords().toString());
 
         PageBean<Guard> pageBean = new PageBean<>();
+        LogUtil.LOG("共:"+guardPage1.getTotal());
         pageBean.setTotal(guardPage1.getTotal());
         pageBean.setItems(guardPage1.getRecords());
         return pageBean;
+    }
+
+    @Override
+    public Guard selectGuardByID(Integer id) {
+        return guardMapper.selectById(id);
+    }
+
+    @Override
+    public Result reviewGuard(Guard guard) {
+        LogUtil.LOG("审核:"+guard.toString());
+        if (guard.getState()!=2)
+        {
+            return Result.error("该保安状态不能审核");
+        }
+        LambdaUpdateWrapper<Guard> groupLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        groupLambdaQueryWrapper.eq(Guard::getId,guard.getId());
+        groupLambdaQueryWrapper.set(Guard::getState,0);
+        int i = guardMapper.update(groupLambdaQueryWrapper);
+
+        if (i>0)
+        {
+            return Result.success();
+        }
+        return Result.error("审核失败");
+    }
+
+    @Override
+    public Result disableGuard(Guard guard) {
+        LogUtil.LOG("禁用:"+guard.toString());
+        LambdaUpdateWrapper<Guard> guardLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        guardLambdaUpdateWrapper.eq(Guard::getId,guard.getId());
+        if (guard.getState()==1)
+        {
+            guardLambdaUpdateWrapper.set(Guard::getState,2);
+        }else{
+            guardLambdaUpdateWrapper.set(Guard::getState,1);
+        }
+        int i = guardMapper.update(guardLambdaUpdateWrapper);
+        if (i>0)
+        {
+            return Result.success();
+        }
+        return Result.error("禁用/解禁失败!");
+    }
+
+    @Override
+    public Result updateguard(Guard guard) {
+        int i = guardMapper.updateById(guard);
+        if (i>0)
+            return Result.success();
+        return Result.error("更新用户信息失败");
+    }
+
+    @Override
+    public Result rePasswordGuard(Guard guard) {
+        String salt = StringUtil.randomStr(6);
+
+        String password = StringUtil.randomStr(10);
+        String md5 = MD5Util.getMD5(password,salt,10);
+        guard.setSalt(salt);
+        guard.setPassword(md5);
+        guard.setUpdateTime(LocalDateTime.now());
+        int i = guardMapper.updateById(guard);
+        if (i>0)
+        {
+            return Result.success(password);
+        }
+        return Result.error("重置失败");
+    }
+
+    @Override
+    public Result updateAdmin(Admin admin) {
+        int i = adminMapper.updateById(admin);
+        if (i>0)
+        {
+            return Result.success();
+        }
+        return Result.error("更新用户数据失败");
     }
 
 }
