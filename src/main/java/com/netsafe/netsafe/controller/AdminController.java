@@ -1,5 +1,6 @@
 package com.netsafe.netsafe.controller;
 
+import com.mysql.cj.log.Log;
 import com.netsafe.netsafe.pojo.*;
 import com.netsafe.netsafe.service.AdminService;
 import com.netsafe.netsafe.utils.LogUtil;
@@ -12,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -118,11 +120,24 @@ public class AdminController {
     }
 
     @PostMapping("/getGuard")
-    public Result getGuard(String curren, @RequestParam(required = false) String guardName, @RequestParam(required = false) String phone, @RequestParam(required = false) String company, @RequestParam(required = false) String state)
+    public Result getGuard(String curren, @RequestParam(required = false) String guardName, @RequestParam(required = false) String phone, @RequestParam(required = false) Integer company, @RequestParam(required = false) Integer state)
     {
+        //转换处理 因为前端可能传入一些奇奇怪怪的值 但是我觉得应该算前端的问题 然后我就没让后端处理了 给前端就行了
 
         PageBean<Guard> pageBean =  adminService.getGuardList(Integer.parseInt(curren),guardName,phone,company,state);
         return Result.success(pageBean);
+    }
+
+    @PostMapping("/deletedGuard")
+    public Result deleteGuard(Integer id)
+    {
+        Guard guard = adminService.selectGuardByID(id);
+        if (guard==null)
+        {
+            return Result.error("该用户不存在");
+        }
+
+        return adminService.deletedGuardByID(id);
     }
 
     @PostMapping("/reviewGuard")
@@ -186,4 +201,16 @@ public class AdminController {
         return adminService.updateAdmin(admin);
     }
 
+    @PostMapping("/batchAllowedGuards")
+    public Result batchAllowedGuards(@RequestBody List<Guard> guard)
+    {
+
+        Map<String,Integer> map = new HashMap<>();
+        for (Guard guard1: guard)
+        {
+            map.put(guard1.getGuardName(),guard1.getId());
+        }
+        LogUtil.LOG("你的传入"+map.toString());
+        return adminService.batchAllowedGuards(map);
+    }
 }

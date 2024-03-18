@@ -1,4 +1,6 @@
 file:
   savePath: E:\file\
   local: http://127.0.0.1/
-
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

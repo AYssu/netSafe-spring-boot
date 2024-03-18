@@ -1,5 +1,6 @@
 package com.netsafe.netsafe.pojo;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
@@ -35,4 +36,6 @@ public class Guard {
     private LocalDateTime createTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+    @TableLogic(value = "0",delval = "1")
+    private int deleted;
 }

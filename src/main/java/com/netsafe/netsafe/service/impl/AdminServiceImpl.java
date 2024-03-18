@@ -16,10 +16,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -119,18 +116,21 @@ public class AdminServiceImpl implements AdminService {
         return guardMapper.selectOne(queryWrapper);
     }
 
+    private boolean checkObjectNull(String object)
+    {
+        return object!=null&& !object.isEmpty() &&!object.equals("null")&&!object.equals("undefined");
+    }
+
     @Override
-    public PageBean<Guard> getGuardList(int curren, String guardName, String phone, String company, String state) {
+    public PageBean<Guard> getGuardList(int curren, String guardName, String phone, Integer company, Integer state) {
+
         Page<Guard> guardPage = new Page<>(curren, 15);
         LambdaQueryWrapper<Guard> queryWrapper = new LambdaQueryWrapper<>();
-        if (guardName!=null&&!guardName.isEmpty()&&!guardName.equals("null"))
-            queryWrapper.like(Guard::getGuardName,guardName);
-        if (phone!=null&&!phone.isEmpty()&&!phone.equals("null"))
-            queryWrapper.like(Guard::getPhone,phone);
-        if (company!=null&&!company.isEmpty()&&!company.equals("null"))
-            queryWrapper.eq(Guard::getCid,Integer.parseInt(company));
-        if (state!=null&&!state.isEmpty()&&!state.equals("null"))
-            queryWrapper.eq(Guard::getState,Integer.parseInt(state));
+
+        queryWrapper.like(checkObjectNull(guardName),Guard::getGuardName,guardName);
+        queryWrapper.like(checkObjectNull(phone),Guard::getPhone,phone);
+        queryWrapper.eq(company!=null,Guard::getCid,company);
+        queryWrapper.eq(state!=null,Guard::getState,state);
         Page<Guard> guardPage1 = guardMapper.selectPage(guardPage, queryWrapper);
 
         PageBean<Guard> pageBean = new PageBean<>();
@@ -216,6 +216,45 @@ public class AdminServiceImpl implements AdminService {
             return Result.success();
         }
         return Result.error("更新用户数据失败");
+    }
+
+
+    @Override
+    public Result deletedGuardByID(Integer id) {
+        int i = guardMapper.deleteById(id);
+        if (i>0)
+            return Result.success();
+        return Result.error("删除用户失败");
+    }
+
+    @Override
+    public Result batchAllowedGuards(Map<String, Integer> map) {
+
+        Set<Map.Entry<String, Integer>> entries = map.entrySet();
+        Integer total = map.size();
+        Integer success = 0;
+        List<String> errorGuard = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : entries)
+        {
+            LambdaUpdateWrapper<Guard> guardLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+            guardLambdaQueryWrapper.eq(Guard::getId,entry.getValue());
+            guardLambdaQueryWrapper.eq(Guard::getState,2);
+            guardLambdaQueryWrapper.set(Guard::getState,0);
+            int i = guardMapper.update(guardLambdaQueryWrapper);
+            if (i>0)
+                success++;
+            else
+                errorGuard.add(entry.getKey());
+        }
+
+        Batch batch = new Batch(total,success,total-success,errorGuard);
+
+        if (success==0)
+        {
+            return Result.error("操作失败!");
+        }
+
+        return Result.success(batch);
     }
 
 }

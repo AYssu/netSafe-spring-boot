@@ -3,6 +3,7 @@ package com.netsafe.netsafe.service;
 import com.netsafe.netsafe.pojo.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AdminService {
     Result login(String adminname, String password);
@@ -22,7 +23,8 @@ public interface AdminService {
     Result insertGuard(Guard guard);
 
     Guard selectGuardByPhone(String phone);
-    PageBean<Guard> getGuardList(int i, String guardName, String phone, String company, String state);
+
+    PageBean<Guard> getGuardList(int curren, String guardName, String phone, Integer company, Integer state);
 
     Guard selectGuardByID(Integer id);
 
@@ -36,4 +38,8 @@ public interface AdminService {
     Result rePasswordGuard(Guard guard);
 
     Result updateAdmin(Admin admin);
+
+    Result deletedGuardByID(Integer id);
+
+    Result batchAllowedGuards(Map<String, Integer> map);
 }
