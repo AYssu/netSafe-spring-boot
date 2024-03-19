@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/admin")
@@ -115,6 +116,12 @@ public class AdminController {
         {
             return Result.error("非法操作");
         }
+
+        Guard guard2 = adminService.selectGuardByPhone(guard.getPhone());
+        if (guard2!=null && !Objects.equals(guard2.getId(), guard1.getId()))
+        {
+            return Result.error("手机号已存在");
+        }
         guard.setUpdateTime(LocalDateTime.now());
         return adminService.updateguard(guard);
     }
@@ -211,6 +218,19 @@ public class AdminController {
             map.put(guard1.getGuardName(),guard1.getId());
         }
         LogUtil.LOG("你的传入"+map.toString());
-        return adminService.batchAllowedGuards(map);
+        return adminService.batchAllowedGuards(map,1);
+    }
+
+    @PostMapping("/batchDisabledGuards")
+    public Result batchDisabledGuards(@RequestBody List<Guard> guard)
+    {
+
+        Map<String,Integer> map = new HashMap<>();
+        for (Guard guard1: guard)
+        {
+            map.put(guard1.getGuardName(),guard1.getId());
+        }
+        LogUtil.LOG("你的传入"+map.toString());
+        return adminService.batchAllowedGuards(map,2);
     }
 }

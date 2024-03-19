@@ -41,5 +41,5 @@ public interface AdminService {
 
     Result deletedGuardByID(Integer id);
 
-    Result batchAllowedGuards(Map<String, Integer> map);
+    Result batchAllowedGuards(Map<String, Integer> map,Integer state);
 }

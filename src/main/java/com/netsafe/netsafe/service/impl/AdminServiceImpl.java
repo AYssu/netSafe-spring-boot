@@ -228,7 +228,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Result batchAllowedGuards(Map<String, Integer> map) {
+    public Result batchAllowedGuards(Map<String, Integer> map , Integer state) {
 
         Set<Map.Entry<String, Integer>> entries = map.entrySet();
         Integer total = map.size();
@@ -238,8 +238,13 @@ public class AdminServiceImpl implements AdminService {
         {
             LambdaUpdateWrapper<Guard> guardLambdaQueryWrapper = new LambdaUpdateWrapper<>();
             guardLambdaQueryWrapper.eq(Guard::getId,entry.getValue());
-            guardLambdaQueryWrapper.eq(Guard::getState,2);
-            guardLambdaQueryWrapper.set(Guard::getState,0);
+            if (state==1) {
+                guardLambdaQueryWrapper.eq(Guard::getState, 2);
+                guardLambdaQueryWrapper.set(Guard::getState, 0);
+            }else {
+                guardLambdaQueryWrapper.eq(Guard::getState, 0) .or().eq(Guard::getState,2);
+                guardLambdaQueryWrapper.set(Guard::getState, 1);
+            }
             int i = guardMapper.update(guardLambdaQueryWrapper);
             if (i>0)
                 success++;
